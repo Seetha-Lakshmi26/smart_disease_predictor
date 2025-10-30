@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Community Health Monitoring System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .form-section {
+            padding: 40px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .symptoms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .symptom-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+        
+        .symptom-item:hover {
+            background: #e9ecef;
+        }
+        
+        .symptom-item input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        
+        .predict-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .predict-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .predict-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .disease-result {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .disease-name {
+            font-size: 1.8em;
+            color: #e74c3c;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .confidence {
+            font-size: 1.1em;
+            color: #7f8c8d;
+        }
+        
+        .info-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .info-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .info-content {
+            color: #34495e;
+            line-height: 1.6;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        @media (max-width: 600px) {
+            .symptoms-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .form-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Smart Aid</h1>
+            <p>Early Disease Detection for Rural Northeast India</p>
+        </div>
+        
+        <div class="form-section">
+            <form id="healthForm">
+                <div class="form-group">
+                    <label for="name">Full Name:</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="age">Age:</label>
+                    <input type="number" id="age" name="age" min="1" max="120" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Your Symptoms:</label>
+                    <div class="symptoms-grid">
+                        <div class="symptom-item">
+                            <input type="checkbox" id="fever" name="symptoms" value="fever">
+                            <label for="fever">Fever</label>
+                        </div>
+                        <div class="symptom-item">
+                            <input type="checkbox" id="headache" name="symptoms" value="headache">
+                            <label for="headache">Headache</label>
+                        </div>
+                        <div class="symptom-item">
+                            <input type="checkbox" id="cough" name="symptoms" value="cough">
+                            <label for="cough">Cough</label>
+                        </div>
+                        <div class="symptom-item">
+                            <input type="checkbox" id="body_ache" name="symptoms" value="body_ache">
+                            <label for="body_ache">Body Ache</label>
+                        </div>
+                        <div class="symptom-item">
+                            <input type="checkbox" id="diarrhea" name="symptoms" value="diarrhea">
+                            <label for="diarrhea">Diarrhea</label>
+                        </div>
+                        <div class="symptom-item">
+                            <input type="checkbox" id="vomiting" name="symptoms" value="vomiting">
+                            <label for="vomiting">Vomiting</label>
+                        </div>
+                        <div class="symptom-item">
+                            <input type="checkbox" id="rash" name="symptoms" value="rash">
+                            <label for="rash">Skin Rash</label>
+                        </div>
+                        <div class="symptom-item">
+                            <input type="checkbox" id="chest_pain" name="symptoms" value="chest_pain">
+                            <label for="chest_pain">Chest Pain</label>
+                        </div>
+                        <div class="symptom-item">
+                            <input type="checkbox" id="shortness_breath" name="symptoms" value="shortness_breath">
+                            <label for="shortness_breath">Shortness of Breath</label>
+                        </div>
+                        <div class="symptom-item">
+                            <input type="checkbox" id="abdominal_pain" name="symptoms" value="abdominal_pain">
+                            <label for="abdominal_pain">Abdominal Pain</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="predict-btn" id="predictBtn">
+                    🔍 Analyze Health Condition
+                </button>
+            </form>
+            
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Analyzing your symptoms...</p>
+            </div>
+            
+            <div id="results" class="results">
+                <div class="disease-result">
+                    <div class="disease-name" id="diseaseName"></div>
+                    <div class="confidence" id="confidence"></div>
+                </div>
+                
+                <div class="info-section">
+                    <div class="info-title">🚑 Immediate First Aid</div>
+                    <div class="info-content" id="firstAid"></div>
+                </div>
+                
+                <div class="info-section">
+                    <div class="info-title">⚠️ Emergency Guidelines</div>
+                    <div class="info-content" id="emergency"></div>
+                </div>
+                
+                <div class="info-section">
+                    <div class="info-title">🛡️ Prevention Measures</div>
+                    <div class="info-content" id="prevention"></div>
+                </div>
+                
+                <div class="info-section">
+                    <div class="info-title">💡 Health Awareness</div>
+                    <div class="info-content" id="awareness"></div>
+                </div>
+            </div>
+            
+            <div id="error" class="error" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('healthForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const age = document.getElementById('age').value;
+            const symptoms = Array.from(document.querySelectorAll('input[name="symptoms"]:checked'))
+                                 .map(checkbox => checkbox.value);
+            
+            if (symptoms.length === 0) {
+                alert('Please select at least one symptom.');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('predictBtn').disabled = true;
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        age: parseInt(age),
+                        symptoms: symptoms
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Display results
+                    document.getElementById('diseaseName').textContent = data.predicted_disease;
+                    document.getElementById('confidence').textContent = `Confidence: ${data.confidence}%`;
+                    document.getElementById('firstAid').textContent = data.disease_info.first_aid;
+                    document.getElementById('emergency').textContent = data.disease_info.emergency;
+                    document.getElementById('prevention').textContent = data.disease_info.prevention;
+                    document.getElementById('awareness').textContent = data.disease_info.awareness;
+                    
+                    document.getElementById('results').style.display = 'block';
+                } else {
+                    throw new Error(data.error || 'Prediction failed');
+                }
+                
+            } catch (error) {
+                document.getElementById('error').textContent = 'Error: ' + error.message;
+                document.getElementById('error').style.display = 'block';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('predictBtn').disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
