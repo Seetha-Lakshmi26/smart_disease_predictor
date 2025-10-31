@@ -11,7 +11,7 @@ app = Flask(__name__)
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'Sl@26062006',
+    'password': 'root',
     'database': 'healthmonitoring'
 }
 
